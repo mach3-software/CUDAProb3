@@ -1,0 +1,14 @@
+# AK135 4 layer, but using quadratic polynomial for the density in each layer
+# Improves on PREM 4 by not assuming constant density in each layer
+# Cubic polynomial has form density = a r^2 + b r + c
+# Idea by Lukas Berns, and http://www.typnet.net/Essays/EarthGravGraphics/EarthGrav.pdf
+# Could also implemened the more detailed polynomials from table 1 of PREM paper (https://doi.org/10.1016/0031-9201(81)90046-7)
+# Updated from v1 by accounting for minimising residuals, giving more SK-like density in outer layer
+# See T2K TN 425 (Oscillation probability calculation for the T2K+SK atmospheric joint fit)
+
+#radius  a (g/cm5)   b (g/cm4)   c (gm/cm3)  Yp
+0.      -2.62382e-7  5.96453e-5  13.00       0.468
+1221.5  -2.62382e-7  5.96453e-5  13.00       0.468
+3480.0  -2.68541e-7  2.93518e-4  12.14       0.468
+5701.0  -5.02591e-8  -7.22022e-5 6.40        0.497
+6371.0  -1.32645e-6  0.0143667   -34.75      0.497

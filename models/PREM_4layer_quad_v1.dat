@@ -1,0 +1,12 @@
+# PREM 4 layer, but using quadratic polynomial for the density in each layer
+# Improves on PREM 4 by not assuming constant density in each layer
+# Cubic polynomial has form density = a r^2 + b r + c
+# Idea by Lukas Berns, and http://www.typnet.net/Essays/EarthGravGraphics/EarthGrav.pdf
+# Could also implemened the more detailed polynomials from table 1 of PREM paper (https://doi.org/10.1016/0031-9201(81)90046-7)
+
+#radius  a          b           c         Yp
+0.      -2.1773e-7  1.9110e-8   1.3088e1  0.468
+1220.0  -2.1773e-7  1.9110e-8   1.3088e1  0.468
+3480.0  -2.4123e-7  1.3976e-4   1.2346e1  0.468
+5701.0  -3.0922e-8  -2.4441e-4  6.7823e0  0.497
+6371.0  0           -1.2603e-3  1.1249e1  0.497
