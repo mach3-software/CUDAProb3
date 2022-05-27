@@ -19,6 +19,8 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 #define CUDAPROB3_MATH_HPP
 
 #include "hpc_helpers.cuh"
+#include "constants.hpp"
+#include <cmath>
 
 namespace cudaprob3{
 
@@ -41,6 +43,36 @@ namespace cudaprob3{
         constexpr T ct_cube(T x){
             return x * x * x;
         }
+
+        template<typename FLOAT_T>
+	HOSTDEVICEQUALIFIER
+	FLOAT_T defined_sinc(FLOAT_T A) {
+	  if (abs(A) >= Constants<FLOAT_T>::Epsilon()) {
+	    return sin(A)/A;
+	  } else {
+	    return FLOAT_T(1) - A*A/6. + A*A*A*A/120.;
+	  }
+	}
+      
+        template<typename FLOAT_T>
+	HOSTDEVICEQUALIFIER
+	void multiply_phase_matrix(FLOAT_T Phase, ComplexNumber<FLOAT_T> A[][3], ComplexNumber<FLOAT_T> B[][3]) {
+	  
+#ifdef __CUDACC__
+	  FLOAT_T c,s;
+	  sincos(Phase, &s, &c);
+#else
+	  const FLOAT_T s = sin(Phase);
+	  const FLOAT_T c = cos(Phase);
+#endif
+	  
+	  for (int i=0; i<3; i++) {
+	    for (int j=0; j<3; j++) {
+	      B[i][j].re += c * A[i][j].re - s * A[i][j].im;
+	      B[i][j].im += c * A[i][j].im + s * A[i][j].re;
+	    }
+	  }
+	}
 
 
         /*

@@ -20,7 +20,6 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constants.hpp"
 #include "propagator.hpp"
-#include "physics.hpp"
 
 #include <omp.h>
 #include <vector>
@@ -34,14 +33,21 @@ namespace cudaprob3{
     template<class FLOAT_T>
     class CpuPropagator : public Propagator<FLOAT_T>{
     public:
-        /// \brief Constructor
+        /// \brief Constructor (Atmospheric)
         ///
         /// @param n_cosines Number cosine bins
         /// @param n_energies Number of energy bins
         /// @param threads Number of threads
         CpuPropagator(int n_cosines, int n_energies, int threads) : Propagator<FLOAT_T>(n_cosines, n_energies){
 
-            resultList.resize(std::uint64_t(n_cosines) * std::uint64_t(n_energies) * std::uint64_t(9));
+            omp_set_num_threads(threads);
+        }
+
+        /// \brief Constructor (Beam)
+        ///
+        /// @param n_energies Number of energy bins
+        /// @param threads Number of threads
+        CpuPropagator(int n_energies, int threads) : Propagator<FLOAT_T>(n_energies){
 
             omp_set_num_threads(threads);
         }
@@ -63,8 +69,6 @@ namespace cudaprob3{
         CpuPropagator& operator=(const CpuPropagator& other){
             Propagator<FLOAT_T>::operator=(other);
 
-            resultList = other.resultList;
-
             return *this;
         }
 
@@ -73,38 +77,12 @@ namespace cudaprob3{
         CpuPropagator& operator=(CpuPropagator&& other){
             Propagator<FLOAT_T>::operator=(std::move(other));
 
-            resultList = std::move(other.resultList);
-
             return *this;
         }
 
     public:
 
-        void calculateProbabilities(NeutrinoType type) override{
-            if(!this->isInit)
-                throw std::runtime_error("CpuPropagator::calculateProbabilities. Object has been moved from.");
-            if(!this->isSetProductionHeight)
-                throw std::runtime_error("CpuPropagator::calculateProbabilities. production height was not set");
-
-            // set neutrino parameters for core physics functions
-            physics::setMixMatrix_host(this->Mix_U.data());
-            physics::setMassDifferences_host(this->dm.data());
-
-            physics::calculate(type, this->cosineList.data(), this->cosineList.size(),
-                this->energyList.data(), this->energyList.size(), this->radii.data(), this->rhos.data(), this->maxlayers.data(), this->ProductionHeightinCentimeter, resultList.data());
-        }
-
-        FLOAT_T getProbability(int index_cosine, int index_energy, ProbType t) override{
-            if(index_cosine >= this->n_cosines || index_energy >= this->n_energies)
-                throw std::runtime_error("CpuPropagator::getProbability. Invalid indices");
-
-            std::uint64_t index = std::uint64_t(index_cosine) * std::uint64_t(this->n_energies) * std::uint64_t(9)
-                    + std::uint64_t(index_energy) * std::uint64_t(9);
-            return resultList[index + int(t)];
-        }
-
     private:
-        std::vector<FLOAT_T> resultList;
     };
 
 

@@ -21,12 +21,13 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 #define CUDAPROB3_CUDAPROPAGATOR_HPP
 
 #include "constants.hpp"
-#include "propagator.hpp"
-#include "physics.hpp"
+#include "beamcpupropagator.hpp"
+//#include "atmoscpupropagator.hpp"
+//#include "physics.hpp"
 #include "cuda_unique.cuh"
 
 #include <algorithm>
-#include <stdexcept>
+//#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -37,7 +38,7 @@ namespace cudaprob3{
     /// \brief Single-GPU neutrino propagation. Derived from Propagator
     /// @param FLOAT_T The floating point type to use for calculations, i.e float, double
     template<class FLOAT_T>
-    class CudaPropagatorSingle : public Propagator<FLOAT_T>{
+    class CudaPropagatorSingle : public Propagator<FLOAT_T> {
         template<typename>
         friend class CudaPropagator;
     public:
@@ -75,6 +76,8 @@ namespace cudaprob3{
             //allocate GPU arrays
             d_energy_list = make_unique_dev<FLOAT_T>(deviceId, n_energies_); CUERR;
             d_cosine_list = make_unique_dev<FLOAT_T>(deviceId, n_cosines_); CUERR;
+            d_productionHeight_prob_list = make_unique_dev<FLOAT_T>(deviceId, Constants<FLOAT_T>::MaxProdHeightBins()*2*3*n_energies_*n_cosines_); CUERR;
+            d_productionHeight_bins_list = make_unique_dev<FLOAT_T>(deviceId, Constants<FLOAT_T>::MaxProdHeightBins()+1); CUERR;
             d_result_list = make_shared_dev<FLOAT_T>(deviceId, std::uint64_t(n_cosines_) * std::uint64_t(n_energies_) * std::uint64_t(9)); CUERR;
             d_maxlayers = make_unique_dev<int>(deviceId, this->n_cosines);
         }
@@ -113,10 +116,16 @@ namespace cudaprob3{
 
             resultList = std::move(other.resultList);
             d_rhos = std::move(other.d_rhos);
+            d_as = std::move(other.d_as);
+            d_bs = std::move(other.d_bs);
+            d_cs = std::move(other.d_cs);
+	    d_yps = std::move(other.d_yps);
             d_radii = std::move(other.d_radii);
             d_maxlayers = std::move(other.d_maxlayers);
             d_energy_list = std::move(other.d_energy_list);
             d_cosine_list = std::move(other.d_cosine_list);
+            d_productionHeight_prob_list = std::move(other.d_productionHeight_prob_list);
+            d_productionHeight_bins_list = std::move(other.d_productionHeight_bins_list);
             d_result_list = std::move(other.d_result_list);
 
             deviceId = other.deviceId;
@@ -129,119 +138,219 @@ namespace cudaprob3{
 
     public:
 
-        void setDensity(const std::vector<FLOAT_T>& radii_, const std::vector<FLOAT_T>& rhos_) override{
-            // call parent function to set up host density data
-            Propagator<FLOAT_T>::setDensity(radii_, rhos_);
+        void setDensity(
+          const std::vector<FLOAT_T>& radii_, 
+          const std::vector<FLOAT_T>& rhos_, 
+          const std::vector<FLOAT_T>& yps_) override{
+          // call parent function to set up host density data
+          Propagator<FLOAT_T>::setDensity(radii_, rhos_, yps_);
 
-            // allocate GPU arrays for density information and copy host density data to device density data
-            cudaSetDevice(deviceId); CUERR;
+          // allocate GPU arrays for density information and copy host density data to device density data
+          cudaSetDevice(deviceId); CUERR;
 
-            int nDensityLayers = this->radii.size();
+          int nDensityLayers = this->radii.size();
 
-            d_rhos = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
-            d_radii = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
+          d_rhos = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
+          d_yps = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
+          d_radii = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
 
-            cudaMemcpy(d_rhos.get(), this->rhos.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
-            cudaMemcpy(d_radii.get(), this->radii.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
+          cudaMemcpy(d_rhos.get(), this->rhos.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
+          cudaMemcpy(d_yps.get(), this->yps.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
+          cudaMemcpy(d_radii.get(), this->radii.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
+        }
+
+        void setDensity(
+          const std::vector<FLOAT_T>& radii_, 
+          const std::vector<FLOAT_T>& as_,
+          const std::vector<FLOAT_T>& bs_,
+          const std::vector<FLOAT_T>& cs_,
+          const std::vector<FLOAT_T>& yps_) override{
+
+          // call parent function to set up host density data
+          Propagator<FLOAT_T>::setDensity(radii_, as_, bs_, cs_, yps_);
+
+          // allocate GPU arrays for density information and copy host density data to device density data
+          cudaSetDevice(deviceId); CUERR;
+
+          int nDensityLayers = this->radii.size();
+
+          d_as = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
+          d_bs = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
+          d_cs = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
+          d_yps = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
+          d_radii = make_unique_dev<FLOAT_T>(deviceId, 2 * nDensityLayers + 1);
+
+          cudaMemcpy(d_as.get(), this->as.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
+          cudaMemcpy(d_bs.get(), this->bs.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
+          cudaMemcpy(d_cs.get(), this->cs.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
+          cudaMemcpy(d_yps.get(), this->yps.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
+          cudaMemcpy(d_radii.get(), this->radii.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
         }
 
         void setEnergyList(const std::vector<FLOAT_T>& list) override{
-            Propagator<FLOAT_T>::setEnergyList(list); // set host energy list
+          Propagator<FLOAT_T>::setEnergyList(list); // set host energy list
 
-            //copy host energy list to gpu memory
-            cudaMemcpy(d_energy_list.get(), this->energyList.data(), sizeof(FLOAT_T) * this->n_energies, H2D); CUERR;
+          //copy host energy list to gpu memory
+          cudaMemcpy(d_energy_list.get(), this->energyList.data(), sizeof(FLOAT_T) * this->n_energies, H2D); CUERR;
         }
 
         void setCosineList(const std::vector<FLOAT_T>& list) override{
-            Propagator<FLOAT_T>::setCosineList(list); // set host cosine list
-            //copy host cosine list to gpu memory
-            cudaMemcpy(d_cosine_list.get(), this->cosineList.data(), sizeof(FLOAT_T) * this->n_cosines, H2D); CUERR;
+          Propagator<FLOAT_T>::setCosineList(list); // set host cosine list
+          //copy host cosine list to gpu memory
+          cudaMemcpy(d_cosine_list.get(), this->cosineList.data(), sizeof(FLOAT_T) * this->n_cosines, H2D); CUERR;
+        }
+
+        void setProductionHeightList(const std::vector<FLOAT_T>& list_prob, const std::vector<FLOAT_T>& list_bins) override{
+          Propagator<FLOAT_T>::setProductionHeightList(list_prob, list_bins); //set host production height list
+
+          cudaMemcpy(d_productionHeight_prob_list.get(), this->productionHeightList_prob.data(), sizeof(FLOAT_T)*Constants<FLOAT_T>::MaxProdHeightBins()*2*3*this->n_energies*this->n_cosines, H2D); CUERR;
+          cudaMemcpy(d_productionHeight_bins_list.get(), this->productionHeightList_bins.data(), sizeof(FLOAT_T)*(Constants<FLOAT_T>::MaxProdHeightBins()+1), H2D); CUERR;
         }
 
         // calculate the probability of each cell
         void calculateProbabilities(NeutrinoType type) override{
-            calculateProbabilitiesAsync(type);
-            waitForCompletion();
+          calculateProbabilitiesAsync(type);
+          waitForCompletion();
+        }
+
+        void setChemicalComposition(const std::vector<FLOAT_T>& list) override{
+          if (list.size() != this->yps.size()) {
+            throw std::runtime_error("cudapropagator::setChemicalComposition. Size of input list not equal to expectation.");
+          }
+
+          for (int iyp=0;iyp<list.size();iyp++) {
+            this->yps[iyp] = list[iyp];
+          }
+
+          int nDensityLayers = this->radii.size();
+
+          cudaMemcpy(d_yps.get(), this->yps.data(), sizeof(FLOAT_T) * nDensityLayers, H2D); CUERR;
         }
 
         // get oscillation weight for specific cosine and energy
         FLOAT_T getProbability(int index_cosine, int index_energy, ProbType t) override{
-            if(index_cosine >= this->n_cosines || index_energy >= this->n_energies)
-                throw std::runtime_error("CudaPropagatorSingle::getProbability. Invalid indices");
+          if(index_cosine >= this->n_cosines || index_energy >= this->n_energies)
+            throw std::runtime_error("CudaPropagatorSingle::getProbability. Invalid indices");
 
-            if(!resultsResideOnHost){
-                getResultFromDevice();
-                resultsResideOnHost = true;
+          if(!resultsResideOnHost){
+            getResultFromDevice();
+            resultsResideOnHost = true;
+          }
+
+          const std::uint64_t index = std::uint64_t(index_cosine) * std::uint64_t(this->n_energies) + std::uint64_t(index_energy);
+          const std::uint64_t offset = std::uint64_t(t) * std::uint64_t(this->n_energies) * std::uint64_t(this->n_cosines);
+
+          return resultList.get()[index + offset];
+        }
+
+        // get oscillation weight for specific cosine and energy
+        void getProbabilityArr(FLOAT_T* probArr, ProbType t) {
+
+          if(!resultsResideOnHost){
+            getResultFromDevice();
+            resultsResideOnHost = true;
+          }
+
+          FLOAT_T* resultList_Arr = resultList.get();
+          const std::uint64_t offset = std::uint64_t(t) * std::uint64_t(this->n_energies) * std::uint64_t(this->n_cosines);
+
+          std::uint64_t iter = 0;
+          for (std::uint64_t index_energy=0;index_energy<this->n_energies;index_energy++) {
+            for (std::uint64_t index_cosine=0;index_cosine<this->n_cosines;index_cosine++) {
+              std::uint64_t index = std::uint64_t(index_cosine) * std::uint64_t(this->n_energies) + std::uint64_t(index_energy);
+              probArr[iter] = resultList_Arr[index + offset];
+              iter += 1;
             }
+          }
 
-            const std::uint64_t index = std::uint64_t(index_cosine) * std::uint64_t(this->n_energies) + std::uint64_t(index_energy);
-            const std::uint64_t offset = std::uint64_t(t) * std::uint64_t(this->n_energies) * std::uint64_t(this->n_cosines);
-
-            return resultList.get()[index + offset];
         }
 
     protected:
         void setMaxlayers() override{
-            Propagator<FLOAT_T>::setMaxlayers();
+          Propagator<FLOAT_T>::setMaxlayers();
 
-            cudaMemcpy(d_maxlayers.get(), this->maxlayers.data(), sizeof(int) * this->n_cosines, H2D); CUERR;
+          cudaMemcpy(d_maxlayers.get(), this->maxlayers.data(), sizeof(int) * this->n_cosines, H2D); CUERR;
         }
 
         // launch the calculation kernel without waiting for its completion
         void calculateProbabilitiesAsync(NeutrinoType type){
-            if(!this->isInit)
-                throw std::runtime_error("CudaPropagatorSingle::calculateProbabilities. Object has been moved from.");
-            if(!this->isSetProductionHeight)
-                throw std::runtime_error("CudaPropagatorSingle::calculateProbabilities. production height was not set");
+          if(!this->isInit)
+            throw std::runtime_error("CudaPropagatorSingle::calculateProbabilities. Object has been moved from.");
+          if(!this->isSetProductionHeight)
+            throw std::runtime_error("CudaPropagatorSingle::calculateProbabilities. production height was not set");
+          if(this->useProductionHeightAveraging && !this->isSetProductionHeightArray)
+            throw std::runtime_error("CudaPropagatorSingle::calculateProbabilities. production height array was not set");
 
-            resultsResideOnHost = false;
-            cudaSetDevice(deviceId); CUERR;
+          resultsResideOnHost = false;
+          cudaSetDevice(deviceId); CUERR;
 
-            // set neutrino parameters for core physics functions for both host and device
-            physics::setMixMatrix(this->Mix_U.data());
-            physics::setMassDifferences(this->dm.data());
+          // set neutrino parameters for core physics functions for both host and device
+          physics::setMixMatrix(this->Mix_U.data());
+          physics::setMassDifferences(this->dm.data());
 
-            dim3 block(64, 1, 1);
+          dim3 block(64, 1, 1);
 
-            //const unsigned blocks = SDIV(this->energyList.size() * this->cosineList.size(), block.x);
-            const unsigned blocks = SDIV(this->energyList.size(), block.x) * this->cosineList.size();
+          //const unsigned blocks = SDIV(this->energyList.size() * this->cosineList.size(), block.x);
+          const unsigned blocks = SDIV(this->energyList.size(), block.x) * this->cosineList.size();
 
-            dim3 grid(blocks, 1, 1);
+          dim3 grid(blocks, 1, 1);
 
-            physics::callCalculateKernelAsync(grid, block, stream,
-                            type,
-                            d_cosine_list.get(), this->n_cosines,
-                            d_energy_list.get(), this->n_energies,
-                            d_radii.get(), d_rhos.get(),
-                            d_maxlayers.get(),
-                            this->ProductionHeightinCentimeter, d_result_list.get());
+          physics::callCalculateKernelAsync(grid, block, stream,
+              type,
+              d_cosine_list.get(), 
+              this->n_cosines,
+              d_energy_list.get(), 
+              this->n_energies,
+              d_radii.get(), 
+              d_as.get(), 
+              d_bs.get(), 
+              d_cs.get(), 
+              d_rhos.get(), 
+              d_yps.get(),
+              d_maxlayers.get(),
+              this->ProductionHeightinCentimeter,
+              this->useProductionHeightAveraging,
+              this->nProductionHeightBins,
+              d_productionHeight_prob_list.get(),
+              d_productionHeight_bins_list.get(),
+              this->UsePolyDensity,
+              d_result_list.get());
 
-            CUERR;
+          CUERR;
         }
 
         // wait for calculateProbabilitiesAsync to finish
         void waitForCompletion(){
-            cudaSetDevice(deviceId); CUERR;
-            cudaStreamSynchronize(stream); CUERR;
+          cudaSetDevice(deviceId); CUERR;
+          cudaStreamSynchronize(stream); CUERR;
         }
 
         // copy results from device to host
         void getResultFromDevice(){
-            cudaSetDevice(deviceId); CUERR;
-            cudaMemcpyAsync(resultList.get(), d_result_list.get(),
-                            sizeof(FLOAT_T) * std::uint64_t(9) * std::uint64_t(this->n_energies) * std::uint64_t(this->n_cosines),
-                            D2H, stream);  CUERR;
-            cudaStreamSynchronize(stream);
+          cudaSetDevice(deviceId); CUERR;
+          cudaMemcpyAsync(resultList.get(), d_result_list.get(),
+              sizeof(FLOAT_T) * std::uint64_t(9) * std::uint64_t(this->n_energies) * std::uint64_t(this->n_cosines),
+              D2H, stream);  CUERR;
+          cudaStreamSynchronize(stream);
         }
 
     private:
         unique_pinned_ptr<FLOAT_T> resultList;
 
+        // density
         unique_dev_ptr<FLOAT_T> d_rhos;
+
+        // Polynomial coefficients
+        unique_dev_ptr<FLOAT_T> d_as;
+        unique_dev_ptr<FLOAT_T> d_bs;
+        unique_dev_ptr<FLOAT_T> d_cs;
+        unique_dev_ptr<FLOAT_T> d_yps;
         unique_dev_ptr<FLOAT_T> d_radii;
         unique_dev_ptr<int> d_maxlayers;
         unique_dev_ptr<FLOAT_T> d_energy_list;
         unique_dev_ptr<FLOAT_T> d_cosine_list;
+        unique_dev_ptr<FLOAT_T> d_productionHeight_prob_list;
+        unique_dev_ptr<FLOAT_T> d_productionHeight_bins_list;
         shared_dev_ptr<FLOAT_T> d_result_list;
 
         cudaStream_t stream;
@@ -256,21 +365,21 @@ namespace cudaprob3{
     /// Most of the setters and calculation functions simply call the appropriate function for each GPU
     /// @param FLOAT_T The floating point type to use for calculations, i.e float, double
     template<class FLOAT_T>
-    class CudaPropagator : public Propagator<FLOAT_T>{
-    public:
-        /// \brief Single GPU constructor for device id 0
-        ///
-        /// @param nc Number cosine bins
-        /// @param ne Number of energy bins
-        CudaPropagator(int nc, int ne) : CudaPropagator(std::vector<int>{0}, nc, ne, true){}
+      class CudaPropagator : public Propagator<FLOAT_T>{
+        public:
+          /// \brief Single GPU constructor for device id 0
+          ///
+          /// @param nc Number cosine bins
+          /// @param ne Number of energy bins
+          CudaPropagator(int nc, int ne) : CudaPropagator(std::vector<int>{0}, nc, ne, true){}
 
-        /// \brief Constructor
-        ///
-        /// @param ids List of device ids of the GPUs to use
-        /// @param nc Number cosine bins
-        /// @param ne Number of energy bins
-        /// @param failOnInvalidId If true, throw exception if ids contains an invalid device id
-        CudaPropagator(const std::vector<int>& ids, int nc, int ne, bool failOnInvalidId = true) : Propagator<FLOAT_T>(nc, ne) {
+          /// \brief Constructor
+          ///
+          /// @param ids List of device ids of the GPUs to use
+          /// @param nc Number cosine bins
+          /// @param ne Number of energy bins
+          /// @param failOnInvalidId If true, throw exception if ids contains an invalid device id
+          CudaPropagator(const std::vector<int>& ids, int nc, int ne, bool failOnInvalidId = true) : Propagator<FLOAT_T>(nc, ne) {
 
             int nDevices;
             cudaGetDeviceCount(&nDevices);
@@ -278,61 +387,61 @@ namespace cudaprob3{
             if(nDevices == 0) throw std::runtime_error("No GPU found");
 
             for(const auto& id: ids){
-                if(id >= nDevices){
-                    if(failOnInvalidId){
-                        std::cout << "Available GPUs:" << std::endl;
-                        for(int j = 0; j < nDevices; j++){
-                            cudaDeviceProp prop;
-                            cudaGetDeviceProperties(&prop, j);
-                            std::cout << "Id " << j << " : " << prop.name << std::endl;
-                        }
-                        throw std::runtime_error("The requested GPU Id " + std::to_string(id) + " is not available.");
-                    }else{
-                        std::cout << "invalid device id found : " << id << std::endl;
-                    }
+              if(id >= nDevices){
+                if(failOnInvalidId){
+                  std::cout << "Available GPUs:" << std::endl;
+                  for(int j = 0; j < nDevices; j++){
+                    cudaDeviceProp prop;
+                    cudaGetDeviceProperties(&prop, j);
+                    std::cout << "Id " << j << " : " << prop.name << std::endl;
+                  }
+                  throw std::runtime_error("The requested GPU Id " + std::to_string(id) + " is not available.");
                 }else{
-                    deviceIds.push_back(id);
+                  std::cout << "invalid device id found : " << id << std::endl;
                 }
+              }else{
+                deviceIds.push_back(id);
+              }
             }
 
             if(deviceIds.size() == 0){
-                throw std::runtime_error("No valid device id found.");
+              throw std::runtime_error("No valid device id found.");
             }
             cosineIndices.resize(deviceIds.size());
             localCosineIndices.resize(this->n_cosines);
 
             for(int icos = 0; icos < this->n_cosines; icos++){
 
-                int deviceIndex = getCosineDeviceIndex(icos);
+              int deviceIndex = getCosineDeviceIndex(icos);
 
-                cosineIndices[deviceIndex].push_back(icos);
-                // the icos-th path is processed by GPU deviceIndex.
-                // In the subproblem processed by GPU deviceIndex, the icos-th path is the localCosineIndices[icos]-th path
-                localCosineIndices[icos] = cosineIndices[deviceIndex].size() - 1;
+              cosineIndices[deviceIndex].push_back(icos);
+              // the icos-th path is processed by GPU deviceIndex.
+              // In the subproblem processed by GPU deviceIndex, the icos-th path is the localCosineIndices[icos]-th path
+              localCosineIndices[icos] = cosineIndices[deviceIndex].size() - 1;
             }
 
             for(size_t i = 0; i < deviceIds.size() && i < size_t(this->n_cosines); i++){
-                propagatorVector.push_back(
-                    std::unique_ptr<CudaPropagatorSingle<FLOAT_T>>(
-                        new CudaPropagatorSingle<FLOAT_T>(deviceIds[i], cosineIndices[i].size(), this->n_energies)
+              propagatorVector.push_back(
+                  std::unique_ptr<CudaPropagatorSingle<FLOAT_T>>(
+                    new CudaPropagatorSingle<FLOAT_T>(deviceIds[i], cosineIndices[i].size(), this->n_energies)
                     )
-                );
+                  );
             }
-        }
+          }
 
-        CudaPropagator(const CudaPropagator& other) = delete;
+          CudaPropagator(const CudaPropagator& other) = delete;
 
-        /// \brief Move constructor
-        /// @param other
-        CudaPropagator(CudaPropagator&& other) : Propagator<FLOAT_T>(other){
+          /// \brief Move constructor
+          /// @param other
+          CudaPropagator(CudaPropagator&& other) : Propagator<FLOAT_T>(other){
             *this = std::move(other);
-        }
+          }
 
-        CudaPropagator& operator=(const CudaPropagator& other) = delete;
+          CudaPropagator& operator=(const CudaPropagator& other) = delete;
 
-        /// \brief Move assignment operator
-        /// @param other
-        CudaPropagator& operator=(CudaPropagator&& other){
+          /// \brief Move assignment operator
+          /// @param other
+          CudaPropagator& operator=(CudaPropagator&& other){
             Propagator<FLOAT_T>::operator=(std::move(other));
 
             deviceIds = std::move(other.deviceIds);
@@ -342,120 +451,139 @@ namespace cudaprob3{
             propagatorVector = std::move(other.propagatorVector);
 
             return *this;
-        }
+          }
 
-    public:
+        public:
 
-        void setDensityFromFile(const std::string& filename) override{
+          void setDensityFromFile(const std::string& filename) override{
             Propagator<FLOAT_T>::setDensityFromFile(filename);
 
             for(auto& propagator : propagatorVector)
-                propagator->setDensityFromFile(filename);
-        }
+              propagator->setDensityFromFile(filename);
+          }
 
-        void setDensity(const std::vector<FLOAT_T>& radii, const std::vector<FLOAT_T>& rhos) override{
-            Propagator<FLOAT_T>::setDensity(radii, rhos);
+          void setDensity(
+              const std::vector<FLOAT_T>& radii, 
+              const std::vector<FLOAT_T>& rhos, 
+              const std::vector<FLOAT_T>& yps) override{
+            Propagator<FLOAT_T>::setDensity(radii, rhos, yps);
 
             for(auto& propagator : propagatorVector)
-                propagator->setDensity(radii, rhos);
-        }
+              propagator->setDensity(radii, rhos, yps);
+          }
 
-        void setNeutrinoMasses(FLOAT_T dm12sq, FLOAT_T dm23sq) override{
+          void setDensity(
+              const std::vector<FLOAT_T>& radii, 
+              const std::vector<FLOAT_T>& a, 
+              const std::vector<FLOAT_T>& b, 
+              const std::vector<FLOAT_T>& c, 
+              const std::vector<FLOAT_T>& yps) override{
+            Propagator<FLOAT_T>::setDensity(radii, a, b, c, yps);
+
+            for(auto& propagator : propagatorVector)
+              propagator->setDensity(radii, a, b, c, yps);
+          }
+
+          void setNeutrinoMasses(FLOAT_T dm12sq, FLOAT_T dm23sq) override{
             Propagator<FLOAT_T>::setNeutrinoMasses(dm12sq, dm23sq);
 
             for(auto& propagator : propagatorVector)
-                propagator->setNeutrinoMasses(dm12sq, dm23sq);
-        }
+              propagator->setNeutrinoMasses(dm12sq, dm23sq);
+          }
 
-        void setMNSMatrix(FLOAT_T theta12, FLOAT_T theta13, FLOAT_T theta23, FLOAT_T dCP) override{
+          void setMNSMatrix(FLOAT_T theta12, FLOAT_T theta13, FLOAT_T theta23, FLOAT_T dCP) override{
             Propagator<FLOAT_T>::setMNSMatrix(theta12, theta13, theta23, dCP);
 
             for(auto& propagator : propagatorVector)
-                propagator->setMNSMatrix(theta12, theta13, theta23, dCP);
-        }
+              propagator->setMNSMatrix(theta12, theta13, theta23, dCP);
+          }
 
-        void setEnergyList(const std::vector<FLOAT_T>& list) override{
+          void setEnergyList(const std::vector<FLOAT_T>& list) override{
             Propagator<FLOAT_T>::setEnergyList(list);
 
             for(auto& propagator : propagatorVector)
-                propagator->setEnergyList(list);
-        }
+              propagator->setEnergyList(list);
+          }
 
-        void setCosineList(const std::vector<FLOAT_T>& list) override{
+          void setCosineList(const std::vector<FLOAT_T>& list) override{
             Propagator<FLOAT_T>::setCosineList(list);
 
             for(size_t i = 0; i < propagatorVector.size(); i++){
-                // make list of cosines for GPU i and pass it to propagator i
-                std::vector<FLOAT_T> myCos(cosineIndices[i].size());
-                std::transform(cosineIndices[i].begin(),
-                                cosineIndices[i].end(),
-                                myCos.begin(),
-                                [&](int icos){ return this->cosineList[icos]; }
-                );
-                propagatorVector[i]->setCosineList(myCos);
+              // make list of cosines for GPU i and pass it to propagator i
+              std::vector<FLOAT_T> myCos(cosineIndices[i].size());
+              std::transform(cosineIndices[i].begin(),
+                  cosineIndices[i].end(),
+                  myCos.begin(),
+                  [&](int icos){ return this->cosineList[icos]; }
+                  );
+              propagatorVector[i]->setCosineList(myCos);
             }
-        }
+          }
 
-        void setProductionHeight(FLOAT_T heightKM) override{
+          void setProductionHeight(FLOAT_T heightKM) override{
             Propagator<FLOAT_T>::setProductionHeight(heightKM);
 
             for(auto& propagator : propagatorVector)
-                propagator->setProductionHeight(heightKM);
-        }
+              propagator->setProductionHeight(heightKM);
+          }
 
-    public:
-        void calculateProbabilities(NeutrinoType type) override{
-
-            for(auto& propagator : propagatorVector)
-                    propagator->calculateProbabilitiesAsync(type);
+        public:
+          void calculateProbabilities(NeutrinoType type) override{
 
             for(auto& propagator : propagatorVector)
-                    propagator->waitForCompletion();
-        }
+              propagator->calculateProbabilitiesAsync(type);
 
-        FLOAT_T getProbability(int index_cosine, int index_energy, ProbType t) override{
-                const int deviceIndex = getCosineDeviceIndex(index_cosine);
-                const int localCosineIndex = localCosineIndices[index_cosine];
+            for(auto& propagator : propagatorVector)
+              propagator->waitForCompletion();
+          }
 
-                return propagatorVector[deviceIndex]->getProbability(localCosineIndex, index_energy, t);
-        }
+          FLOAT_T getProbability(int index_cosine, int index_energy, ProbType t) override{
+            const int deviceIndex = getCosineDeviceIndex(index_cosine);
+            const int localCosineIndex = localCosineIndices[index_cosine];
 
-    private:
+            return propagatorVector[deviceIndex]->getProbability(localCosineIndex, index_energy, t);
+          }
 
-        void setMaxlayers() override{
+          void getProbabilityArr(FLOAT_T* probArr, ProbType t) {
+            throw std::runtime_error("CudaPropagatorSingle::getProbabilityArr. Will not work!");
+          }
+
+        private:
+
+          void setMaxlayers() override{
             Propagator<FLOAT_T>::setMaxlayers();
 
             for(auto& propagator : propagatorVector)
-                propagator->setMaxlayers();
-        }
+              propagator->setMaxlayers();
+          }
 
-        // get index in device id for the GPU which processes the index_cosine-th path
-        int getCosineDeviceIndex(int index_cosine){
-        #if 0
-                // block distribution
-                int id = 0;
-                for(int i = deviceIds.size(); i-- > 0;){
-                        if(index_cosine < (i+1) * n_cosines / deviceIds.size())
-                            id = i;
-                }
-        #else
-                // cyclic distribution.
-                const int id = index_cosine % deviceIds.size();
-        #endif
-                return id;
-        }
+          // get index in device id for the GPU which processes the index_cosine-th path
+          int getCosineDeviceIndex(int index_cosine){
+#if 0
+            // block distribution
+            int id = 0;
+            for(int i = deviceIds.size(); i-- > 0;){
+              if(index_cosine < (i+1) * n_cosines / deviceIds.size())
+                id = i;
+            }
+#else
+            // cyclic distribution.
+            const int id = index_cosine % deviceIds.size();
+#endif
+            return id;
+          }
 
-    private:
+        private:
 
-        std::vector<int> deviceIds;
-        std::vector<std::vector<int>> cosineIndices;
-        std::vector<int> localCosineIndices;
+          std::vector<int> deviceIds;
+          std::vector<std::vector<int>> cosineIndices;
+          std::vector<int> localCosineIndices;
 
-        std::vector<int> cosineBatches;
+          std::vector<int> cosineBatches;
 
-        // one CudaPropagatorSingle per GPU
-        std::vector<std::unique_ptr<CudaPropagatorSingle<FLOAT_T>>> propagatorVector;
-    };
+          // one CudaPropagatorSingle per GPU
+          std::vector<std::unique_ptr<CudaPropagatorSingle<FLOAT_T>>> propagatorVector;
+      };
 
 }
 
