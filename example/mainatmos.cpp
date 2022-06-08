@@ -15,9 +15,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <beamcpupropagator.hpp> // include openmp propagator
-#include <atmoscpupropagator.hpp> // include openmp propagator
-#include <cudapropagator.cuh> // include cuda propagator
+#include <beamcudapropagator.cuh> // include openmp propagator
+#include <atmoscudapropagator.cu> // include openmp propagator
 #include <hpc_helpers.cuh> // timer
 
 
@@ -134,9 +133,9 @@ int main(int argc, char** argv){
   propagator->setNeutrinoMasses(dm12sq, dm23sq);
 
   // set density model
-  //propagator->setDensityFromFile("models/PREM_12layer.dat");
+  propagator->setDensityFromFile("models/PREM_12layer.dat");
   //propagator->setDensityFromFile("../models/PREM_4layer_quad_v2.dat");
-  propagator->setDensityFromFile("../models/PREM_4layer_quad_v1.dat");
+  //propagator->setDensityFromFile("../models/PREM_4layer_quad_v1.dat");
   //propagator->setDensityFromFile("../models/AK135_5layer_quad.dat");
   //propagator->setDensityFromFile("../models/PREM_4layer.dat");
 

@@ -95,12 +95,12 @@ int main(int argc, char** argv){
   double rho = 2.848;
 
 //#ifndef USE_CPU
-  //int n_threads = 1;
-  //BeamCpuPropagator<FLOAT_T> *propagator; // cpu propagator with 4 threads
-  //propagator = new BeamCpuPropagator<FLOAT_T>(n_energies, n_threads); // cpu propagator with 4 threads
+  int n_threads = 1;
+  BeamCpuPropagator<FLOAT_T> *propagator; // cpu propagator with 4 threads
+  propagator = new BeamCpuPropagator<FLOAT_T>(n_energies, n_threads); // cpu propagator with 4 threads
   
-  BeamCudaPropagatorSingle<FLOAT_T> *propagator; // cpu propagator with 4 threads
-  propagator = new BeamCudaPropagatorSingle<FLOAT_T>(0, n_energies); // cpu propagator with 4 threads
+  //BeamCudaPropagatorSingle<FLOAT_T> *propagator; // cpu propagator with 4 threads
+  //propagator = new BeamCudaPropagatorSingle<FLOAT_T>(0, n_energies); // cpu propagator with 4 threads
 //#else
 
   // these 3 are only available if compiled with nvcc.
