@@ -226,6 +226,7 @@ namespace cudaprob3{
           std::reverse(yps.begin(), yps.end());
           std::reverse(as.begin(), as.end());
           std::reverse(bs.begin(), bs.end());
+          std::reverse(cs.begin(), cs.end());
         }
 
         coslimit.clear();
