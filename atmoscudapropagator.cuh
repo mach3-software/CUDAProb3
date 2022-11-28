@@ -15,14 +15,15 @@ You should have received a copy of the GNU Lesser General Public License
 along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//#ifdef __NVCC__  //change this to ifndef __NVCC__ before running doxygen. otherwise both classes are not included in the documentation
+#include "constants.hpp"
+#include "atmoscpupropagator.hpp"
+#include "physics.hpp"
+
+#ifdef __NVCC__  //change this to ifndef __NVCC__ before running doxygen. otherwise both classes are not included in the documentation
 
 #ifndef CUDAPROB3_ATMOSCUDAPROPAGATOR_CUH
 #define CUDAPROB3_ATMOSCUDAPROPAGATOR_CUH
 
-#include "constants.hpp"
-#include "atmoscpupropagator.hpp"
-#include "physics.hpp"
 #include "cuda_unique.cuh"
 
 #include <algorithm>
@@ -355,5 +356,5 @@ namespace cudaprob3{
 #endif
 
 
-//#endif // #ifdef __NVCC__
+#endif // #ifdef __NVCC__
 
