@@ -19,7 +19,8 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 #include "beamcpupropagator.hpp"
 #include "physics.hpp"
 
-#ifdef __NVCC__ //change this to ifndef __NVCC__ before running doxygen. otherwise both classes are not included in the documentation
+//#ifdef __NVCC__ //change this to ifndef __NVCC__ before running doxygen. otherwise both classes are not included in the documentation
+#ifndef CPU_ONLY
 
 #ifndef CUDAPROB3_BEAMCUDAPROPAGATOR_HPP
 #define CUDAPROB3_BEAMCUDAPROPAGATOR_HPP
@@ -353,4 +354,5 @@ namespace cudaprob3{
 #endif
 
 
-#endif // #ifdef __NVCC__
+//#endif // #ifdef __NVCC__
+#endif // #ifndef CPU_ONLY
