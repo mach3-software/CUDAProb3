@@ -145,7 +145,12 @@ namespace cudaprob3{
       /// @param theta13
       /// @param theta23
       /// @param dCP
-      virtual void setMNSMatrix(FLOAT_T theta12, FLOAT_T theta13, FLOAT_T theta23, FLOAT_T dCP){
+      virtual void setMNSMatrix(FLOAT_T theta12, FLOAT_T theta13, FLOAT_T theta23, FLOAT_T dCP, int kNuType){
+
+        if (kNuType < 0)
+        {
+          dCP *= -1;
+        }
 
         const FLOAT_T s12 = sin(theta12);
         const FLOAT_T s13 = sin(theta13);
