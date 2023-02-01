@@ -271,13 +271,13 @@ namespace cudaprob3{
 
         FLOAT_T mMatU[3], mMat[3];
 
-        /* Equations (22) fro Barger et.al.*/
+        /* Equations (22) fro Barger et.al. */
         const FLOAT_T fac = [&](){
-          if(type == Antineutrino)
-            return Constants<FLOAT_T>::tworttwoGf()*Enu*rho;
+          if(type == Antineutrino) {
+            return Constants<FLOAT_T>::tworttwoGf()*Enu*rho; }
           else
-            return -Constants<FLOAT_T>::tworttwoGf()*Enu*rho;
-        }();
+            {return -Constants<FLOAT_T>::tworttwoGf()*Enu*rho;}
+        }(); 
 
         const FLOAT_T alpha  = fac + DM(0,1) + DM(0,2);
 
@@ -1172,21 +1172,17 @@ namespace cudaprob3{
         for(unsigned index = blockIdx.x * blockDim.x + threadIdx.x; index < max_energies_per_path; index += blockDim.x * gridDim.x){
           const unsigned index_energy = index % max_energies_per_path;
           //const unsigned index_energy = blockIdx.x * blockDim.x + threadIdx.x;
-#else
-          // on the host, we use OpenMP to parallelize looping over cosines
 #endif
 
           FLOAT_T phaseOffset = 0.;
 
-          //math::ComplexNumber<FLOAT_T> TransitionMatrix[nNuFlav][nNuFlav];
           math::ComplexNumber<FLOAT_T> finalTransitionMatrix[nNuFlav][nNuFlav];
 
           FLOAT_T Prob[nNuFlav][nNuFlav];
 
-          math::ComplexNumber<FLOAT_T> Product[nExp][nNuFlav][nNuFlav];
-
 #ifndef __CUDA_ARCH__
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel private(finalTransitionMatrix, Prob)
+#pragma omp for
           for(int index_energy = 0; index_energy < n_energies; index_energy += 1){
 #else
             if(index_energy < n_energies){
@@ -1201,10 +1197,6 @@ namespace cudaprob3{
                         Prob[iNuFlav][jNuFlav] = 0.;
                       }
                   }
-
-                for (int iExp=0;iExp<nExp;iExp++) {
-                  clear_complex_matrix(Product[iExp]);
-                }
 
                 // loop from vacuum layer to innermost crossed layer
                   // Probably also doesn't need recalculating (could be stored for each cos theta)
