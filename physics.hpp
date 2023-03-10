@@ -1163,7 +1163,6 @@ namespace cudaprob3{
         prepare_getMfast<FLOAT_T>(type);
 #endif
         // Save some memory and access by defining these here
-        const int nExp = 3;
         const int nNuFlav = 3;
 
 #ifdef __CUDA_ARCH__
