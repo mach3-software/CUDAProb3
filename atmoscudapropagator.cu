@@ -167,6 +167,17 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
           cudaMemcpy(d_radii.get(), this->radii.data(), sizeof(double) * nDensityLayers, H2D); CUERR;
         }
 
+        void cudaprob3::AtmosCudaPropagatorSingle::setDensity( double rho ) {
+	      std::cout << "DUMMY FUNCTION: ATMOS class uses setDensity( \n" ;
+          std::cout << "const std::vector<double>& radii_, \n " ;
+          std::cout << "const std::vector<double>& a_, \n " ;
+          std::cout << "const std::vector<double>& b_, \n " ;
+          std::cout << "const std::vector<double>& c_, \n " ;
+          std::cout << "const std::vector<double>& yps_) \n " ;
+		  std::cout << "or \n " ;
+          std::cout << "setDensityFromFile(const std::string& filename) " << std::endl;
+		}
+
         void cudaprob3::AtmosCudaPropagatorSingle::setEnergyList(const std::vector<double>& list) {
           AtmosCpuPropagator<double>::setEnergyList(list); // set host energy list
 
