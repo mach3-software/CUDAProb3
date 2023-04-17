@@ -30,8 +30,8 @@ endif
 # Had to modify ptx assembler option
 all: gpu
 gpu:
-	nvcc -g -O0 -x cu $(ARCH) -lineinfo -std=c++11 -Xcompiler="-fopenmp -O0 -Wall" -I.. mainbeam.cpp -o mainbeamgpu
-	nvcc -g -O0 -x cu $(ARCH) -lineinfo -std=c++11 -Xcompiler="-fopenmp -O0 -Wall" -I.. mainatmos.cpp -o mainatmosgpu
+	nvcc -g -O0 -x cu $(ARCH) -lineinfo -std=c++11 -Xcompiler="-fopenmp -O0 -Wall -DGPU_ON" -I.. mainbeam.cpp -o mainbeamgpu
+	nvcc -g -O0 -x cu $(ARCH) -lineinfo -std=c++11 -Xcompiler="-fopenmp -O0 -Wall -DGPU_ON" -I.. mainatmos.cpp -o mainatmosgpu
 
 cpu:
 	g++ -g -O0 -std=c++11 -fopenmp -Wall -I.. -I$(CUDAINC) -L$(CUDALIB) -DUSE_CPU mainatmos.cpp -o mainatmoscpu

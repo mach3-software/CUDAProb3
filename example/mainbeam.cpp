@@ -15,9 +15,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <beamcpupropagator.hpp> // include openmp propagator
-#include <beamcudapropagator.cuh> // include openmp propagator
-//#include <atmoscpupropagator.hpp> // include openmp propagator
+#include <beamcudapropagator.cu> // include openmp propagator
 #include <hpc_helpers.cuh> // timer
 
 
@@ -81,8 +79,7 @@ int main(int argc, char** argv){
   //if(argc > 3)
   //	n_threads = std::atoi(argv[3]);
 
-  //std::vector<FLOAT_T> energyList = linspace((FLOAT_T)1.e-1, (FLOAT_T)50.e1, n_energies);
-  std::vector<FLOAT_T> energyList(n_energies, 3.47279);
+  std::vector<FLOAT_T> energyList = linspace((FLOAT_T)1.e-1, (FLOAT_T)50.e1, n_energies);
 
   // Prob3++ probRoot.cc parameters in radians
   const FLOAT_T theta12 = asin(sqrt(0.3097));
@@ -92,31 +89,36 @@ int main(int argc, char** argv){
   const FLOAT_T dm12sq = 7.39e-5;
   const FLOAT_T dm23sq = 2.4511e-3;
 
+  //DUNE Density and Path Length
   double rho = 2.848;
+  double L = 1284.9;
 
-//#ifndef USE_CPU
-  int n_threads = 1;
+  //Neutrino Flavour +/- = neutrino/antineutrino, 1 = e, 2 = mu, 3 = tau
+  int nu_flav = 2;
+
+/*  // NuFit 4 Params
+  const FLOAT_T theta12 = asin(sqrt(0.307));
+  const FLOAT_T theta13 = asin(sqrt(0.0218));
+  const FLOAT_T theta23 = asin(sqrt(0.528));
+  const FLOAT_T dcp     = 0.64;
+  const FLOAT_T dm12sq = 7.39e-5;
+  const FLOAT_T dm23sq = 2.525e-3; */
+
+#ifdef USE_CPU
+  int n_threads = 20;
   BeamCpuPropagator<FLOAT_T> *propagator; // cpu propagator with 4 threads
   propagator = new BeamCpuPropagator<FLOAT_T>(n_energies, n_threads); // cpu propagator with 4 threads
-  
-  //BeamCudaPropagatorSingle<FLOAT_T> *propagator; // cpu propagator with 4 threads
-  //propagator = new BeamCudaPropagatorSingle<FLOAT_T>(0, n_energies); // cpu propagator with 4 threads
-//#else
-
-  // these 3 are only available if compiled with nvcc.
-
-  //propagator = new BeamCudaPropagatorSingle<FLOAT_T>(n_energies); // cpu propagator with 4 threads
-  //std::unique_ptr<Propagator<FLOAT_T>> propagator( new BeamCudaPropagatorSingle<FLOAT_T>(n_energies)); // Single GPU propagator using GPU 0
-//#endif
-  //std::unique_ptr<Propagator<FLOAT_T>> propagator( new CudaPropagator<FLOAT_T>(std::vector<int>{0}, n_cosines, n_energies)); // Multi GPU propagator which only uses GPU 0. Behaves identical to propagator above.
-  //std::unique_ptr<Propagator<FLOAT_T>> propagator( new CudaPropagator<FLOAT_T>(std::vector<int>{0, 1, 2, 3}, n_cosines, n_energies)); // Multi GPU propagator which uses GPU 0 and GPU 1
+#else
+  BeamCudaPropagatorSingle *propagator; // cpu propagator with 4 threads
+  propagator = new BeamCudaPropagatorSingle(0, n_energies); // cpu propagator with 4 threads
+#endif
 
 
   // set energy list
   propagator->setEnergyList(energyList);
 
   // set mixing matrix. angles in radians
-  propagator->setMNSMatrix(theta12, theta13, theta23, dcp);
+  propagator->setMNSMatrix(theta12, theta13, theta23, dcp, nu_flav);
 
   // set neutrino mass differences. unit: eV^2
   propagator->setNeutrinoMasses(dm12sq, dm23sq);
@@ -125,7 +127,7 @@ int main(int argc, char** argv){
   propagator->setDensity(rho);
 
   // set Path length 
-  propagator->setPathLength(1284.9);
+  propagator->setPathLength(L);
  
   //std::vector<FLOAT_T> prob;
   //std::vector<FLOAT_T> height;
@@ -134,38 +136,33 @@ int main(int argc, char** argv){
   propagator->calculateProbabilities(cudaprob3::Neutrino);
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration  = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-  std::cout << "Time taken setup: " << duration.count() << " ms " << std::endl;
+  std::cout << "Time taken for " << n_energies << " energies = " << duration.count() << " ms " << std::endl;
 
   //first result access after calculation triggers data transfer
-  //propagator->getProbability(0, ProbType::m_m);
+  propagator->getProbability(0, ProbType::m_m);
 
   // write output to files
 
-  //std::ofstream outfile10("out_cudaboth_me.txt");
-  //std::ofstream outfile11("out_cudaboth_mm.txt");
-  //std::ofstream outfile12("out_cudaboth_mt.txt");
+  std::ofstream outfile10("out_cudaboth_me.txt");
+  std::ofstream outfile11("out_cudaboth_mm.txt");
+  std::ofstream outfile12("out_cudaboth_mt.txt");
 
 
-  //auto start2 = std::chrono::high_resolution_clock::now();
-  //for(int i = 0; i < 10; i++) {
-    //propagator->calculateProbabilities(cudaprob3::Neutrino);
+  for(int i = 0; i < n_energies; i++) {
 
     // ProbType::x_y is probability of transition x -> y
-    //outfile10 << std::setprecision(100) << propagator->getProbability(i, ProbType::m_e) << " ";
-    //outfile11 << std::setprecision(100) << propagator->getProbability(i, ProbType::m_m) << " ";
-    //std::cout << std::setprecision(100) << propagator->getProbability(i, ProbType::m_m) << std::endl;
-  //}
+    outfile10 << std::setprecision(100) << propagator->getProbability(i, ProbType::m_e) << " ";
+    outfile11 << std::setprecision(100) << propagator->getProbability(i, ProbType::m_m) << " ";
+    outfile12 << std::setprecision(100) << propagator->getProbability(i, ProbType::m_m) << std::endl;
+  }
 
-  //auto stop2 = std::chrono::high_resolution_clock::now();
-  //auto duration2  = std::chrono::duration_cast<std::chrono::milliseconds>(stop2 - start2);
-  //std::cout << "Time taken calc: " << duration2.count() << " ms " << std::endl;
-  //outfile10 << '\n';
-  //outfile11 << '\n';
-  //outfile12 << '\n';
+  outfile10 << '\n';
+  outfile11 << '\n';
+  outfile12 << '\n';
 
-  //outfile10.flush();
-  //outfile11.flush();
-  //outfile12.flush();
+  outfile10.flush();
+  outfile11.flush();
+  outfile12.flush();
 
 
 
