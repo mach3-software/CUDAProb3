@@ -4,8 +4,6 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
-set(GPU_ON on)
-
 if(${GPU_ON})
   project(CUDAProb3 LANGUAGES CXX C CUDA)
   message("#### CUDAProb3 with CPU and GPU ######")
