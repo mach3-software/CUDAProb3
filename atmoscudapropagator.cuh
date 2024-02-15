@@ -19,8 +19,8 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 #include "atmoscpupropagator.hpp"
 #include "physics.hpp"
 
-#ifdef __NVCC__  //change this to ifndef __NVCC__ before running doxygen. otherwise both classes are not included in the documentation
-//#ifndef CPU_ONLY 
+//#ifdef __NVCC__  //change this to ifndef __NVCC__ before running doxygen. otherwise both classes are not included in the documentation
+#ifdef GPU_ON
 
 #ifndef CUDAPROB3_ATMOSCUDAPROPAGATOR_CUH
 #define CUDAPROB3_ATMOSCUDAPROPAGATOR_CUH
@@ -87,6 +87,8 @@ namespace cudaprob3{
           const std::vector<double>& bs_,
           const std::vector<double>& cs_,
           const std::vector<double>& yps_) override;
+
+        void setDensity( double rho) override;
 
         void setEnergyList(const std::vector<double>& list) override;
 
@@ -358,5 +360,5 @@ namespace cudaprob3{
 
 
 //#endif // #ifdef __NVCC__
-#endif // #ifndef CPU_ONLY
+#endif // #ifdef GPU_ON
 

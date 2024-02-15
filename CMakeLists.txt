@@ -4,10 +4,12 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
-if(${CPU_ONLY})
-  project(CUDAProb3 LANGUAGES CXX C)
-else()
+if(${GPU_ON})
   project(CUDAProb3 LANGUAGES CXX C CUDA)
+  message("#### CUDAProb3 with CPU and GPU ######")
+else()
+  project(CUDAProb3 LANGUAGES CXX C)
+  message("#### CUDAProb3 with CPU ONLY ######")
 endif()
 
 #Changes default install path to be a subdirectory of the build dir.
@@ -26,16 +28,7 @@ elseif(NOT DEFINED CMAKE_BUILD_TYPE)
 endif()
 
 
-if(${CPU_ONLY})
-
-  add_library(CUDAProb3Beam INTERFACE)
-  add_library(CUDAProb3Atmos INTERFACE)
-
-  target_include_directories(CUDAProb3Beam INTERFACE ${PROJECT_SOURCE_DIR})
-  target_include_directories(CUDAProb3Atmos INTERFACE ${PROJECT_SOURCE_DIR})
-
-else()
-
+if(${GPU_ON})
 
   SET(HEADERS_BEAM beamcudapropagator.cuh)
   SET(HEADERS_ATMOS atmoscudapropagator.cuh)
@@ -62,6 +55,9 @@ else()
   
   set_property(TARGET CUDAProb3Beam PROPERTY CUDA_ARCHITECTURES 35 52 60 61 70 75)
   set_property(TARGET CUDAProb3Atmos PROPERTY CUDA_ARCHITECTURES 35 52 60 61 70 75)
+
+  target_compile_options(CUDAProb3Beam PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-DGPU_ON>)
+  target_compile_options(CUDAProb3Atmos PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-DGPU_ON>)
   
   target_include_directories(
     CUDAProb3Beam PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
@@ -83,6 +79,15 @@ else()
     NAMESPACE CUDAProb3::
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/CUDAProb3
   )
+
+else()
+
+  add_library(CUDAProb3Beam INTERFACE)
+  add_library(CUDAProb3Atmos INTERFACE)
+
+  target_include_directories(CUDAProb3Beam INTERFACE ${PROJECT_SOURCE_DIR})
+  target_include_directories(CUDAProb3Atmos INTERFACE ${PROJECT_SOURCE_DIR})
+
 
 endif()
 

@@ -15,7 +15,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <beamcudapropagator.cuh> // include openmp propagator
 #include <atmoscudapropagator.cu> // include openmp propagator
 #include <hpc_helpers.cuh> // timer
 
@@ -98,6 +97,9 @@ int main(int argc, char** argv){
   const FLOAT_T dm12sq = 7.9e-5;
   const FLOAT_T dm23sq = 2.5e-3;
 
+  //Neutrino Flavour +/- = neutrino/antineutrino, 1 = e, 2 = mu, 3 = tau
+  int nu_flav = 2;
+
 /*  // NuFit 4 Params
   const FLOAT_T theta12 = asin(sqrt(0.307));
   const FLOAT_T theta13 = asin(sqrt(0.0218));
@@ -106,19 +108,14 @@ int main(int argc, char** argv){
   const FLOAT_T dm12sq = 7.39e-5;
   const FLOAT_T dm23sq = 2.525e-3; */
 
-//#ifndef USE_CPU
-  int n_threads = 1;
-  //std::unique_ptr<Propagator<FLOAT_T>> propagator( new BeamCpuPropagator<FLOAT_T>(n_cosines, n_energies, n_threads)); // cpu propagator with 4 threads
-  std::unique_ptr<AtmosCpuPropagator<FLOAT_T>> propagator( new AtmosCpuPropagator<FLOAT_T>(n_cosines, n_energies, n_threads)); // cpu propagator with 4 threads
-//#else
-
-  // these 3 are only available if compiled with nvcc.
-
-  //std::unique_ptr<Propagator<FLOAT_T>> propagator( new CudaPropagatorSingle<FLOAT_T>(0, n_cosines, n_energies)); // Single GPU propagator using GPU 0
-//#endif
-  //std::unique_ptr<Propagator<FLOAT_T>> propagator( new CudaPropagator<FLOAT_T>(std::vector<int>{0}, n_cosines, n_energies)); // Multi GPU propagator which only uses GPU 0. Behaves identical to propagator above.
-  //std::unique_ptr<Propagator<FLOAT_T>> propagator( new CudaPropagator<FLOAT_T>(std::vector<int>{0, 1, 2, 3}, n_cosines, n_energies)); // Multi GPU propagator which uses GPU 0 and GPU 1
-
+#ifdef USE_CPU
+  int n_threads = 20;
+  AtmosCpuPropagator<FLOAT_T> *propagator;
+  propagator = new AtmosCpuPropagator<FLOAT_T>(n_cosines, n_energies, n_threads); // cpu propagator with 4 threads
+#else
+  AtmosCudaPropagatorSingle *propagator;
+  propagator = new AtmosCudaPropagatorSingle(0, n_cosines, n_energies); // cpu propagator with 4 threads
+#endif
 
   // set energy list
   propagator->setEnergyList(energyList);
@@ -127,17 +124,17 @@ int main(int argc, char** argv){
   propagator->setCosineList(cosineList);
 
   // set mixing matrix. angles in radians
-  propagator->setMNSMatrix(theta12, theta13, theta23, dcp);
+  propagator->setMNSMatrix(theta12, theta13, theta23, dcp, nu_flav);
 
   // set neutrino mass differences. unit: eV^2
   propagator->setNeutrinoMasses(dm12sq, dm23sq);
 
   // set density model
-  propagator->setDensityFromFile("models/PREM_12layer.dat");
+  //propagator->setDensityFromFile("models/PREM_12layer.dat");
   //propagator->setDensityFromFile("../models/PREM_4layer_quad_v2.dat");
   //propagator->setDensityFromFile("../models/PREM_4layer_quad_v1.dat");
   //propagator->setDensityFromFile("../models/AK135_5layer_quad.dat");
-  //propagator->setDensityFromFile("../models/PREM_4layer.dat");
+  propagator->setDensityFromFile("../models/PREM_4layer.dat");
 
   // set neutrino production height in kilometers above earth
   propagator->setProductionHeight(22.0);
@@ -152,7 +149,11 @@ int main(int argc, char** argv){
   //propagator->setProductionHeightList(prob, height);
 
   // perform calculation. parameter is either cudaprob3::Neutrino or cudaprob3::Antineutrino
+  auto start = std::chrono::high_resolution_clock::now();
   propagator->calculateProbabilities(cudaprob3::Neutrino);
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration  = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+  std::cout << "Time taken for " << n_energies << " energies and " << n_cosines << " cosines = " << duration.count() << " ms " << std::endl;
 
 
   //first result access after calculation triggers data transfer
