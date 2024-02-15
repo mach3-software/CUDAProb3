@@ -245,7 +245,11 @@ namespace cudaprob3{
       /// \brief get oscillation weight
       /// @param probArr Cosine bin index (zero based)
       /// @param t Specify which probability P(i->j)
-      //virtual void getProbabilityArr(FLOAT_T* probArr, ProbType t) = 0;
+      virtual void getProbabilityArr(FLOAT_T* probArr, ProbType t) = 0;
+
+	  virtual void setPathLength( FLOAT_T path_length ) = 0;
+
+	  virtual void setDensity( FLOAT_T rho ) = 0;
 
     protected:
       cudaprob3::math::ComplexNumber<FLOAT_T>& U(int i, int j){
@@ -260,8 +264,6 @@ namespace cudaprob3{
       std::vector<FLOAT_T> cosineList;
       std::vector<int> maxlayers;
       //std::vector<FLOAT_T> pathLengths;
-      //std::vector<FLOAT_T> beam_path_length;
-      //std::vector<FLOAT_T> beam_density;
 
       //std::vector<FLOAT_T> productionHeightList_prob;
       //std::vector<FLOAT_T> productionHeightList_bins;

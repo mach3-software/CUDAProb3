@@ -106,7 +106,6 @@ namespace cudaprob3{
       }
 
 
-
         /// \brief Set density information from arrays.
         /// \details radii_ and rhos_ must be same size. both radii_ and rhos_ must be sorted, in the same order.
         /// The density (g/cm^3) at a distance (km) from the center of the sphere between radii_[i], exclusive,
@@ -344,7 +343,24 @@ namespace cudaprob3{
         n_layers = radii.size();
       }
       
-  
+        // Currently a dummy function
+        virtual void setDensity( FLOAT_T rho ) {
+	      std::cout << "DUMMY FUNCTION: ATMOS class uses setDensity( \n" ;
+          std::cout << "const std::vector<FLOAT_T>& radii_, \n " ;
+          std::cout << "const std::vector<FLOAT_T>& a_, \n " ;
+          std::cout << "const std::vector<FLOAT_T>& b_, \n " ;
+          std::cout << "const std::vector<FLOAT_T>& c_, \n " ;
+          std::cout << "const std::vector<FLOAT_T>& yps_) \n " ;
+		  std::cout << "or \n " ;
+          std::cout << "setDensityFromFile(const std::string& filename) " << std::endl;
+        }
+
+
+        // Currently a dummy function
+        virtual void setPathLength( FLOAT_T path_length ) {
+		  std::cout << "DUMMY FUNCTION - ATMOS class calculates PATH LENGTH" << std::endl; 
+        }
+
       /// \brief Set cosine bins. Cosines are given in radians
       /// @param list Cosine list
       virtual void setCosineList(const std::vector<FLOAT_T>& list){
