@@ -4,12 +4,16 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
+if(NOT DEFINED GPU_ON)
+  message(FATAL_ERROR "GPU_ON is not defined")
+endif()
+
 if(${GPU_ON})
   project(CUDAProb3 LANGUAGES CXX C CUDA)
-  message("#### CUDAProb3 with CPU and GPU ######")
+  message(STATUS "#### CUDAProb3 with CPU and GPU ######")
 else()
   project(CUDAProb3 LANGUAGES CXX C)
-  message("#### CUDAProb3 with CPU ONLY ######")
+  message(STATUS "#### CUDAProb3 with CPU ONLY ######")
 endif()
 
 #Changes default install path to be a subdirectory of the build dir.
@@ -36,8 +40,7 @@ if(${GPU_ON})
    
   SET(SOURCE_BEAM beamcudapropagator.cu)
   SET(SOURCE_ATMOS atmoscudapropagator.cu)
-  
-  
+
   add_library(CUDAProb3Beam SHARED ${SOURCE_BEAM})
   add_library(CUDAProb3Atmos SHARED ${SOURCE_ATMOS})
   
@@ -53,11 +56,29 @@ if(${GPU_ON})
           CUDA_SEPARABLE_COMPILATION ON 
           LINKER_LANGUAGE CUDA)
   
-  set_property(TARGET CUDAProb3Beam PROPERTY CUDA_ARCHITECTURES 35 52 60 61 70 75)
-  set_property(TARGET CUDAProb3Atmos PROPERTY CUDA_ARCHITECTURES 35 52 60 61 70 75)
+  #KS: Allow user to define CMAKE_CUDA_ARCHITECTURES
+  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    #KS: See this for more info https://cmake.org/cmake/help/latest/prop_tgt/CUDA_ARCHITECTURES.html
+  if( ${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.23 )
+    set(CMAKE_CUDA_ARCHITECTURES all )
+    #KS: Consider using native, requires cmake 3.24... will be terrible for containers but should results in more optimised code
+    #set(CMAKE_CUDA_ARCHITECTURES native )
+  else()
+    #KS: Apparently with newer cmake and GPU
+    set(CMAKE_CUDA_ARCHITECTURES 35 52 60 61 70 75 80 86)
+  endif()
+  #KS: Bit hacky but to properly pass cuda flags we need
+  string(REPLACE ";" " " CMAKE_CUDA_ARCHITECTURES_STRING "${CMAKE_CUDA_ARCHITECTURES}")
+  else()
+  #KS this may look hacky however CPM isn't build for passing stuff like this. If CMAKE_CUDA_ARCHITECTURES is passed CPM it will be  string not list. Thus we convert it to list
+  set(CMAKE_CUDA_ARCHITECTURES_STRING ${CMAKE_CUDA_ARCHITECTURES})
+  string(REPLACE " " ";" CMAKE_CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
+  endif()
 
-  target_compile_options(CUDAProb3Beam PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-DGPU_ON>)
-  target_compile_options(CUDAProb3Atmos PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-DGPU_ON>)
+  set_property(TARGET CUDAProb3Beam PROPERTY CUDA_ARCHITECTURES ${CMAKE_CUDA_ARCHITECTURES})
+  set_property(TARGET CUDAProb3Atmos PROPERTY CUDA_ARCHITECTURES ${CMAKE_CUDA_ARCHITECTURES})
+
+  add_compile_definitions($<$<COMPILE_LANGUAGE:CUDA>:GPU_ON>)
   
   target_include_directories(
     CUDAProb3Beam PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
@@ -90,19 +111,3 @@ else()
 
 
 endif()
-
-#include(CMakePackageConfigHelpers)
-#configure_package_config_file(
-#  CUDAProb3Config.cmake.in ${CMAKE_BINARY_DIR}/Prob3plusplusConfig.cmake
-#  INSTALL_DESTINATION 
-#  	/this/is/ignored/for/some/reason/thanks/kitware
-#  NO_SET_AND_CHECK_MACRO
-#  NO_CHECK_REQUIRED_COMPONENTS_MACRO)
-#
-#install(FILES 
-#		${CMAKE_BINARY_DIR}/CUDAProb3Config.cmake 
-#	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/CUDAProb3)
-#
-#write_basic_package_version_file(${CMAKE_INSTALL_PREFIX}/lib/cmake/CUDAProb3/CUDAProb3ConfigVersion.cmake
-  #VERSION ${CUDAProb3_VERSION}
- # COMPATIBILITY AnyNewerVersion)
