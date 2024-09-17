@@ -79,22 +79,22 @@ if(${GPU_ON})
   set_property(TARGET CUDAProb3Atmos PROPERTY CUDA_ARCHITECTURES ${CMAKE_CUDA_ARCHITECTURES})
 
   add_compile_definitions($<$<COMPILE_LANGUAGE:CUDA>:GPU_ON>)
-  
+
   target_include_directories(
     CUDAProb3Beam PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
                          $<INSTALL_INTERFACE:include>
   )
-  
+
   target_include_directories(
     CUDAProb3Atmos PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
                          $<INSTALL_INTERFACE:include>
   )
   
-  install(TARGETS CUDAProb3Beam CUDAProb3Atmos 
+  install(TARGETS CUDAProb3Beam CUDAProb3Atmos
   		EXPORT CUDAProb3-target
   		LIBRARY DESTINATION lib/
   		PUBLIC_HEADER DESTINATION include/)
-  
+
   install(EXPORT CUDAProb3-target
     FILE CUDAProb3Targets.cmake
     NAMESPACE CUDAProb3::
@@ -106,12 +106,9 @@ else()
   add_library(CUDAProb3Beam INTERFACE)
   add_library(CUDAProb3Atmos INTERFACE)
 
-  target_include_directories(
-    CUDAProb3Beam PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
-                         $<INSTALL_INTERFACE:include>)
-
-  target_include_directories(
-    CUDAProb3Atmos PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
-                         $<INSTALL_INTERFACE:include>)
+  target_include_directories(CUDAProb3Beam INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+                  $<INSTALL_INTERFACE:include>)
+  target_include_directories(CUDAProb3Atmos INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+                  $<INSTALL_INTERFACE:include>)
 
 endif()
