@@ -46,7 +46,7 @@ namespace cudaprob3{
     public:
         /// \brief Constructor (Atmospheric)
         ///
-        /// @param n_cosines Number cosine bins
+        /// @param num_cosines Number cosine bins
         /// @param num_energies Number of energy bins
         Propagator(int num_cosines, int num_energies) : n_cosines(num_cosines), n_energies(num_energies){
             energyList.resize(n_energies);

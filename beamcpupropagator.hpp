@@ -38,11 +38,11 @@ namespace cudaprob3{
         /// \brief Constructor
         ///
         /// @param n_cosines Number cosine bins
-        /// @param n_energies Number of energy bins
+        /// @param num_energies Number of energy bins
         /// @param threads Number of threads
-        BeamCpuPropagator(int n_energies, int threads) : CpuPropagator<FLOAT_T>(n_energies, threads){
+        BeamCpuPropagator(int num_energies, int threads) : CpuPropagator<FLOAT_T>(num_energies, threads){
 
-            resultList.resize(std::uint64_t(n_energies) * std::uint64_t(9));
+            resultList.resize(std::uint64_t(num_energies) * std::uint64_t(9));
 
             omp_set_num_threads(threads);
         }
