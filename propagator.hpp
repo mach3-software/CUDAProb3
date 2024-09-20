@@ -48,7 +48,7 @@ namespace cudaprob3{
         ///
         /// @param n_cosines Number cosine bins
         /// @param num_energies Number of energy bins
-        Propagator(int n_cosines, int num_energies) : n_cosines(n_cosines), n_energies(num_energies){
+        Propagator(int num_cosines, int num_energies) : n_cosines(num_cosines), n_energies(num_energies){
             energyList.resize(n_energies);
             cosineList.resize(n_cosines);
             maxlayers.resize(n_cosines);

@@ -345,6 +345,7 @@ namespace cudaprob3{
       
         // Currently a dummy function
         virtual void setDensity( FLOAT_T rho ) {
+          (void) rho;
 	      std::cout << "DUMMY FUNCTION: ATMOS class uses setDensity( \n" ;
           std::cout << "const std::vector<FLOAT_T>& radii_, \n " ;
           std::cout << "const std::vector<FLOAT_T>& a_, \n " ;
@@ -358,6 +359,7 @@ namespace cudaprob3{
 
         // Currently a dummy function
         virtual void setPathLength( FLOAT_T path_length ) {
+          (void) path_length;
 		  std::cout << "DUMMY FUNCTION - ATMOS class calculates PATH LENGTH" << std::endl; 
         }
 
