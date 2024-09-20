@@ -47,8 +47,8 @@ namespace cudaprob3{
         /// \brief Constructor (Atmospheric)
         ///
         /// @param n_cosines Number cosine bins
-        /// @param n_energies Number of energy bins
-        Propagator(int n_cosines, int n_energies) : n_cosines(n_cosines), n_energies(n_energies){
+        /// @param num_energies Number of energy bins
+        Propagator(int n_cosines, int num_energies) : n_cosines(n_cosines), n_energies(num_energies){
             energyList.resize(n_energies);
             cosineList.resize(n_cosines);
             maxlayers.resize(n_cosines);
@@ -57,7 +57,7 @@ namespace cudaprob3{
         /// \brief Constructor (Beam)
         ///
         /// @param n_energies Number of energy bins
-        Propagator(int n_energies) : n_energies(n_energies){
+        Propagator(int num_energies) : n_energies(num_energies){
             energyList.resize(n_energies);
         }
 

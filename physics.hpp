@@ -197,6 +197,7 @@ namespace cudaprob3{
     //
     template<typename FLOAT_T>
       void prepare_getMfast(NeutrinoType type) {
+        (void) type;
         FLOAT_T alphaV, betaV, gammaV, argV, tmpV;
         FLOAT_T theta0V, theta1V, theta2V;
         FLOAT_T mMatV[3];
@@ -345,7 +346,7 @@ namespace cudaprob3{
       HOSTDEVICEQUALIFIER
       void get_product(const FLOAT_T L, const FLOAT_T E, const FLOAT_T rho, const FLOAT_T d_dmMatVac[][3], const FLOAT_T d_dmMatMat[][3],
           const NeutrinoType type, math::ComplexNumber<FLOAT_T> product[][3][3]){
-
+        (void) L;
         math::ComplexNumber<FLOAT_T> twoEHmM[3][3][3];
 
         const FLOAT_T fac = [&](){
