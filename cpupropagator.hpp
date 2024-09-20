@@ -36,18 +36,18 @@ namespace cudaprob3{
         /// \brief Constructor (Atmospheric)
         ///
         /// @param n_cosines Number cosine bins
-        /// @param n_energies Number of energy bins
+        /// @param num_energies Number of energy bins
         /// @param threads Number of threads
-        CpuPropagator(int n_cosines, int n_energies, int threads) : Propagator<FLOAT_T>(n_cosines, n_energies){
+        CpuPropagator(int num_cosines, int num_energies, int threads) : Propagator<FLOAT_T>(num_cosines, num_energies){
 
             omp_set_num_threads(threads);
         }
 
         /// \brief Constructor (Beam)
         ///
-        /// @param n_energies Number of energy bins
+        /// @param num_energies Number of energy bins
         /// @param threads Number of threads
-        CpuPropagator(int n_energies, int threads) : Propagator<FLOAT_T>(n_energies){
+        CpuPropagator(int num_energies, int threads) : Propagator<FLOAT_T>(num_energies){
 
             omp_set_num_threads(threads);
         }
