@@ -20,7 +20,6 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "hpc_helpers.cuh"
 
-#include <cuda_runtime.h>
 #include <cuda.h>
 
 #include <memory>
