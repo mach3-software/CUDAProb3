@@ -61,7 +61,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         /// \brief Constructor which uses device id 0
         ///
         /// @param n_energies Number of energy bins
-        cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(int n_energies) : cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(0, n_energies){
+        cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(int n_energies, int n_threads) : cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(0, n_energies, n_threads){
 
         }
 
