@@ -48,7 +48,8 @@ namespace cudaprob3{
         /// @param id device id of the GPU to use
         /// @param n_cosines_ Number cosine bins
         /// @param n_energies_ Number of energy bins
-        BeamCudaPropagatorSingle(int id, int n_energies_); 
+	/// @param n_threads_ Number of threads
+        BeamCudaPropagatorSingle(int id, int n_energies_, int n_threads_); 
 
         /// \brief Constructor which uses device id 0
         ///

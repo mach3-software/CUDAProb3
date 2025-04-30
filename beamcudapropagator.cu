@@ -26,7 +26,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         ///
         /// @param id device id of the GPU to use
         /// @param n_energies_ Number of energy bins
-        cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(int id, int n_energies_) : cudaprob3::BeamCpuPropagator<double>(n_energies_, 1), deviceId(id){
+        cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(int id, int n_energies_, int n_threads_) : cudaprob3::BeamCpuPropagator<double>(n_energies_, n_threads_), deviceId(id){
 
             int nDevices;
 
