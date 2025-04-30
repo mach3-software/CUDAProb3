@@ -54,7 +54,7 @@ namespace cudaprob3{
         /// \brief Constructor which uses device id 0
         ///
         /// @param n_energies Number of energy bins
-        BeamCudaPropagatorSingle(int n_energiesm int n_threads); //: BeamCudaPropagatorSingle(0, n_energies, n_threads);
+        BeamCudaPropagatorSingle(int n_energies, int n_threads); //: BeamCudaPropagatorSingle(0, n_energies, n_threads);
 
         /// \brief Destructor
         ~BeamCudaPropagatorSingle();
