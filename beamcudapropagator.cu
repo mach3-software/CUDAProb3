@@ -26,7 +26,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         ///
         /// @param id device id of the GPU to use
         /// @param n_energies_ Number of energy bins
-        cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(int id, int n_energies_, int n_threads_) : cudaprob3::BeamCpuPropagator<double>(n_energies_, n_threads_), deviceId(id){
+        cudaprob3linear::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(int id, int n_energies_, int n_threads_) : cudaprob3linear::BeamCpuPropagator<double>(n_energies_, n_threads_), deviceId(id){
 
             int nDevices;
 
@@ -61,31 +61,31 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         /// \brief Constructor which uses device id 0
         ///
         /// @param n_energies Number of energy bins
-        cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(int n_energies, int n_threads) : cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(0, n_energies, n_threads){
+        cudaprob3linear::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(int n_energies, int n_threads) : cudaprob3linear::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(0, n_energies, n_threads){
 
         }
 
         /// \brief Destructor
-        cudaprob3::BeamCudaPropagatorSingle::~BeamCudaPropagatorSingle(){
+        cudaprob3linear::BeamCudaPropagatorSingle::~BeamCudaPropagatorSingle(){
             cudaSetDevice(deviceId);
             cudaStreamDestroy(stream);
         }
 
         /// \brief Move constructor
         /// @param other
-        //cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(BeamCudaPropagatorSingle&& other) : BeamCpuPropagator<double>(other){
+        //cudaprob3linear::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle(BeamCudaPropagatorSingle&& other) : BeamCpuPropagator<double>(other){
           //  *this = std::move(other);
 
           //  cudaSetDevice(deviceId);
           //  cudaStreamCreate(&stream); CUERR;
        // }
 
-        //cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle& operator=(const BeamCudaPropagatorSingle& other) = delete;
+        //cudaprob3linear::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle& operator=(const BeamCudaPropagatorSingle& other) = delete;
 
         /// \brief Move assignment operator
         /// @param other
-       /* cudaprob3::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle& operator=(BeamCudaPropagatorSingle&& other){
-            cudaprob3::BeamCpuPropagator<double>::operator=(std::move(other));
+       /* cudaprob3linear::BeamCudaPropagatorSingle::BeamCudaPropagatorSingle& operator=(BeamCudaPropagatorSingle&& other){
+            cudaprob3linear::BeamCpuPropagator<double>::operator=(std::move(other));
 
             resultList = std::move(other.resultList);
             d_energy_list = std::move(other.d_energy_list);
@@ -100,7 +100,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
             return *this;
         } */
 
-        void cudaprob3::BeamCudaPropagatorSingle::setDensity( double beam_density_) {
+        void cudaprob3linear::BeamCudaPropagatorSingle::setDensity( double beam_density_) {
           // call parent function to set up host density data
           BeamCpuPropagator<double>::setDensity(beam_density_);
 
@@ -114,7 +114,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
           cudaMemcpy(d_rhos.get(), rho.data(), sizeof(double) * this->n_energies, H2D); CUERR;
         }
 
-        void cudaprob3::BeamCudaPropagatorSingle::setPathLength( double beam_path_length_) {
+        void cudaprob3linear::BeamCudaPropagatorSingle::setPathLength( double beam_path_length_) {
           // call parent function to set up host density data
           BeamCpuPropagator<double>::setPathLength(beam_path_length_);
 
@@ -129,7 +129,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
           cudaMemcpy(d_path_lengths.get(), len.data(), sizeof(double) * this->n_energies, H2D); CUERR;
         }
 
-        void cudaprob3::BeamCudaPropagatorSingle::setEnergyList(const std::vector<double>& list) {
+        void cudaprob3linear::BeamCudaPropagatorSingle::setEnergyList(const std::vector<double>& list) {
           Propagator<double>::setEnergyList(list); // set host energy list
 
           //copy host energy list to gpu memory
@@ -137,13 +137,13 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         }
 
         // calculate the probability of each cell
-        void cudaprob3::BeamCudaPropagatorSingle::calculateProbabilities(NeutrinoType type) {
+        void cudaprob3linear::BeamCudaPropagatorSingle::calculateProbabilities(NeutrinoType type) {
           calculateBeamProbabilitiesAsync(type);
           waitForCompletion();
         }
 
         // get oscillation weight for specific cosine and energy
-        double cudaprob3::BeamCudaPropagatorSingle::getProbability(int index_energy, ProbType t) {
+        double cudaprob3linear::BeamCudaPropagatorSingle::getProbability(int index_energy, ProbType t) {
           if(index_energy >= this->n_energies)
             throw std::runtime_error("CudaPropagatorSingle::getProbability. Invalid indices");
 
@@ -159,7 +159,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         }
 
         // get oscillation weight for specific energy
-        void cudaprob3::BeamCudaPropagatorSingle::getProbabilityArr(double* probArr, ProbType t) {
+        void cudaprob3linear::BeamCudaPropagatorSingle::getProbabilityArr(double* probArr, ProbType t) {
 
           if(!resultsResideOnHost){
             getResultFromDevice();
@@ -178,7 +178,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         }
 
         // launch the calculation kernel without waiting for its completion
-        void cudaprob3::BeamCudaPropagatorSingle::calculateBeamProbabilitiesAsync(NeutrinoType type){
+        void cudaprob3linear::BeamCudaPropagatorSingle::calculateBeamProbabilitiesAsync(NeutrinoType type){
           if(!this->isInit)
             throw std::runtime_error("CudaPropagatorSingle::calculateProbabilities. Object has been moved from.");
 
@@ -208,14 +208,14 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         }
 
         // wait for calculateProbabilitiesAsync to finish
-        void cudaprob3::BeamCudaPropagatorSingle::waitForCompletion(){
+        void cudaprob3linear::BeamCudaPropagatorSingle::waitForCompletion(){
 
           cudaSetDevice(deviceId); CUERR;
           cudaStreamSynchronize(stream); CUERR;
         }
 
         // copy results from device to host
-        void cudaprob3::BeamCudaPropagatorSingle::getResultFromDevice(){
+        void cudaprob3linear::BeamCudaPropagatorSingle::getResultFromDevice(){
           cudaSetDevice(deviceId); CUERR;
           cudaMemcpyAsync(resultList.get(), d_result_list.get(),
               sizeof(double) * std::uint64_t(9) * std::uint64_t(this->n_energies),

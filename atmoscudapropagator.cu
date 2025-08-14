@@ -27,7 +27,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         /// @param id device id of the GPU to use
         /// @param n_cosines_ Number cosine bins
         /// @param n_energies_ Number of energy bins
-        cudaprob3::AtmosCudaPropagatorSingle::AtmosCudaPropagatorSingle(int id, int n_cosines_, int n_energies_) : cudaprob3::AtmosCpuPropagator<double>(n_cosines_, n_energies_, 1), deviceId(id){
+        cudaprob3linear::AtmosCudaPropagatorSingle::AtmosCudaPropagatorSingle(int id, int n_cosines_, int n_energies_) : cudaprob3linear::AtmosCpuPropagator<double>(n_cosines_, n_energies_, 1), deviceId(id){
 
             int nDevices;
 
@@ -65,17 +65,17 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         ///
         /// @param n_cosines Number cosine bins
         /// @param n_energies Number of energy bins
-        cudaprob3::AtmosCudaPropagatorSingle::AtmosCudaPropagatorSingle(int n_cosines, int n_energies) : cudaprob3::AtmosCudaPropagatorSingle(0, n_cosines, n_energies){
+        cudaprob3linear::AtmosCudaPropagatorSingle::AtmosCudaPropagatorSingle(int n_cosines, int n_energies) : cudaprob3linear::AtmosCudaPropagatorSingle(0, n_cosines, n_energies){
 
         }
 
         /// \brief Destructor
-        cudaprob3::AtmosCudaPropagatorSingle::~AtmosCudaPropagatorSingle(){
+        cudaprob3linear::AtmosCudaPropagatorSingle::~AtmosCudaPropagatorSingle(){
             cudaSetDevice(deviceId);
             cudaStreamDestroy(stream);
         }
 
-        //cudaprob3::AtmosCudaPropagatorSingle::AtmosCudaPropagatorSingle(const AtmosCudaPropagatorSingle& other) = delete;
+        //cudaprob3linear::AtmosCudaPropagatorSingle::AtmosCudaPropagatorSingle(const AtmosCudaPropagatorSingle& other) = delete;
 
 /*
         /// \brief Move constructor
@@ -118,7 +118,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
             return *this;
         } */
 
-        void cudaprob3::AtmosCudaPropagatorSingle::setDensity(
+        void cudaprob3linear::AtmosCudaPropagatorSingle::setDensity(
           const std::vector<double>& radii_, 
           const std::vector<double>& rhos_, 
           const std::vector<double>& yps_) {
@@ -139,7 +139,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
           cudaMemcpy(d_radii.get(), this->radii.data(), sizeof(double) * nDensityLayers, H2D); CUERR;
         }
 
-        void cudaprob3::AtmosCudaPropagatorSingle::setDensity(
+        void cudaprob3linear::AtmosCudaPropagatorSingle::setDensity(
           const std::vector<double>& radii_, 
           const std::vector<double>& as_,
           const std::vector<double>& bs_,
@@ -167,7 +167,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
           cudaMemcpy(d_radii.get(), this->radii.data(), sizeof(double) * nDensityLayers, H2D); CUERR;
         }
 
-        void cudaprob3::AtmosCudaPropagatorSingle::setDensity( double rho ) {
+        void cudaprob3linear::AtmosCudaPropagatorSingle::setDensity( double rho ) {
 	      std::cout << "DUMMY FUNCTION: ATMOS class uses setDensity( \n" ;
           std::cout << "const std::vector<double>& radii_, \n " ;
           std::cout << "const std::vector<double>& a_, \n " ;
@@ -178,20 +178,20 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
           std::cout << "setDensityFromFile(const std::string& filename) " << std::endl;
 		}
 
-        void cudaprob3::AtmosCudaPropagatorSingle::setEnergyList(const std::vector<double>& list) {
+        void cudaprob3linear::AtmosCudaPropagatorSingle::setEnergyList(const std::vector<double>& list) {
           AtmosCpuPropagator<double>::setEnergyList(list); // set host energy list
 
           //copy host energy list to gpu memory
           cudaMemcpy(d_energy_list.get(), this->energyList.data(), sizeof(double) * this->n_energies, H2D); CUERR;
         }
 
-        void cudaprob3::AtmosCudaPropagatorSingle::setCosineList(const std::vector<double>& list) {
+        void cudaprob3linear::AtmosCudaPropagatorSingle::setCosineList(const std::vector<double>& list) {
           AtmosCpuPropagator<double>::setCosineList(list); // set host cosine list
           //copy host cosine list to gpu memory
           cudaMemcpy(d_cosine_list.get(), this->cosineList.data(), sizeof(double) * this->n_cosines, H2D); CUERR;
         }
 
-        void cudaprob3::AtmosCudaPropagatorSingle::setProductionHeightList(const std::vector<double>& list_prob, const std::vector<double>& list_bins) {
+        void cudaprob3linear::AtmosCudaPropagatorSingle::setProductionHeightList(const std::vector<double>& list_prob, const std::vector<double>& list_bins) {
           AtmosCpuPropagator<double>::setProductionHeightList(list_prob, list_bins); //set host production height list
 
           cudaMemcpy(d_productionHeight_prob_list.get(), this->productionHeightList_prob.data(), sizeof(double)*Constants<double>::MaxProdHeightBins()*2*3*this->n_energies*this->n_cosines, H2D); CUERR;
@@ -199,12 +199,12 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         }
 
         // calculate the probability of each cell
-        void cudaprob3::AtmosCudaPropagatorSingle::calculateProbabilities(NeutrinoType type) {
+        void cudaprob3linear::AtmosCudaPropagatorSingle::calculateProbabilities(NeutrinoType type) {
           calculateAtmosProbabilitiesAsync(type);
           waitForCompletion();
         }
 
-        void cudaprob3::AtmosCudaPropagatorSingle::setChemicalComposition(const std::vector<double>& list) {
+        void cudaprob3linear::AtmosCudaPropagatorSingle::setChemicalComposition(const std::vector<double>& list) {
           if (list.size() != this->yps.size()) {
             throw std::runtime_error("cudapropagator::setChemicalComposition. Size of input list not equal to expectation.");
           }
@@ -219,7 +219,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         }
 
         // get oscillation weight for specific cosine and energy
-        double cudaprob3::AtmosCudaPropagatorSingle::getProbability(int index_cosine, int index_energy, ProbType t) {
+        double cudaprob3linear::AtmosCudaPropagatorSingle::getProbability(int index_cosine, int index_energy, ProbType t) {
           if(index_cosine >= this->n_cosines || index_energy >= this->n_energies)
             throw std::runtime_error("CudaPropagatorSingle::getProbability. Invalid indices");
 
@@ -235,7 +235,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         }
 
         // get oscillation weight for specific cosine and energy
-        void cudaprob3::AtmosCudaPropagatorSingle::getProbabilityArr(double* probArr, ProbType t) {
+        void cudaprob3linear::AtmosCudaPropagatorSingle::getProbabilityArr(double* probArr, ProbType t) {
 
           if(!resultsResideOnHost){
             getResultFromDevice();
@@ -256,14 +256,14 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 
         }
 
-        void cudaprob3::AtmosCudaPropagatorSingle::setMaxlayers() {
+        void cudaprob3linear::AtmosCudaPropagatorSingle::setMaxlayers() {
           AtmosCpuPropagator<double>::setMaxlayers();
 
           cudaMemcpy(d_maxlayers.get(), this->maxlayers.data(), sizeof(int) * this->n_cosines, H2D); CUERR;
         }
 
         // launch the calculation kernel without waiting for its completion
-        void cudaprob3::AtmosCudaPropagatorSingle::calculateAtmosProbabilitiesAsync(NeutrinoType type){
+        void cudaprob3linear::AtmosCudaPropagatorSingle::calculateAtmosProbabilitiesAsync(NeutrinoType type){
           if(!this->isInit)
             throw std::runtime_error("CudaPropagatorSingle::calculateProbabilities. Object has been moved from.");
           if(!this->isSetProductionHeight)
@@ -310,13 +310,13 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
         }
 
         // wait for calculateProbabilitiesAsync to finish
-        void cudaprob3::AtmosCudaPropagatorSingle::waitForCompletion(){
+        void cudaprob3linear::AtmosCudaPropagatorSingle::waitForCompletion(){
           cudaSetDevice(deviceId); CUERR;
           cudaStreamSynchronize(stream); CUERR;
         }
 
         // copy results from device to host
-        void cudaprob3::AtmosCudaPropagatorSingle::getResultFromDevice(){
+        void cudaprob3linear::AtmosCudaPropagatorSingle::getResultFromDevice(){
           cudaSetDevice(deviceId); CUERR;
           cudaMemcpyAsync(resultList.get(), d_result_list.get(),
               sizeof(double) * std::uint64_t(9) * std::uint64_t(this->n_energies) * std::uint64_t(this->n_cosines),

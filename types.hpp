@@ -18,7 +18,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CUDAPROB3_TYPES_HPP
 #define CUDAPROB3_TYPES_HPP
 
-namespace cudaprob3{
+namespace cudaprob3linear{
 
     enum ProbType : int{
         e_e = 0, e_m = 1, e_t = 2,

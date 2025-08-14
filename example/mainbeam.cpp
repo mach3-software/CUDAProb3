@@ -26,7 +26,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-using namespace cudaprob3; // namespace of the propagators
+using namespace cudaprob3linear; // namespace of the propagators
 
 template<class T>
 std::vector<T> linspace(T Emin,T Emax,unsigned int div){
@@ -133,7 +133,7 @@ int main(int argc, char** argv){
   //std::vector<FLOAT_T> height;
 
   auto start = std::chrono::high_resolution_clock::now();
-  propagator->calculateProbabilities(cudaprob3::Neutrino);
+  propagator->calculateProbabilities(cudaprob3linear::Neutrino);
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration  = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
   std::cout << "Time taken for " << n_energies << " energies = " << duration.count() << " ms " << std::endl;

@@ -20,7 +20,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "hpc_helpers.cuh"
 
-namespace cudaprob3{
+namespace cudaprob3linear{
 
     template<typename FLOAT_T>
     struct Constants{
