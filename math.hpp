@@ -22,7 +22,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 #include "constants.hpp"
 #include <cmath>
 
-namespace cudaprob3{
+namespace cudaprob3linear{
 
     namespace math{
 

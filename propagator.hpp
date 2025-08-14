@@ -34,7 +34,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
-namespace cudaprob3{
+namespace cudaprob3linear{
 
 
     /// \class Propagator
@@ -252,7 +252,7 @@ namespace cudaprob3{
 	  virtual void setDensity( FLOAT_T rho ) = 0;
 
     protected:
-      cudaprob3::math::ComplexNumber<FLOAT_T>& U(int i, int j){
+      cudaprob3linear::math::ComplexNumber<FLOAT_T>& U(int i, int j){
         return Mix_U[( i * 3 + j)];
       }
 
@@ -276,7 +276,7 @@ namespace cudaprob3{
       std::vector<FLOAT_T> yps;
       //std::vector<FLOAT_T> coslimit;
 
-      std::array<cudaprob3::math::ComplexNumber<FLOAT_T>, 9> Mix_U; // MNS mixing matrix
+      std::array<cudaprob3linear::math::ComplexNumber<FLOAT_T>, 9> Mix_U; // MNS mixing matrix
       std::array<FLOAT_T, 9> dm; // mass differences;
 
       //FLOAT_T ProductionHeightinCentimeter;
@@ -303,7 +303,7 @@ namespace cudaprob3{
 
 
 
-} // namespace cudaprob3
+} // namespace cudaprob3linear
 
 
 #endif

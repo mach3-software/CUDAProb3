@@ -32,7 +32,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 
-namespace cudaprob3{
+namespace cudaprob3linear{
 
     /// \class BeamCudaPropagatorSingle
     /// \brief Single-GPU beam neutrino propagation. Derived from Propagator

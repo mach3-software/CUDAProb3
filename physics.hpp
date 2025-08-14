@@ -90,21 +90,21 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 // in device code, we need to access the device global constants instead of host global constants
 #ifdef __CUDA_ARCH__
 
-#define U(i,j) ((math::ComplexNumber<FLOAT_T>*)cudaprob3::physics::mix_data_device)[( i * 3 + j)]
-#define DM(i,j) ((FLOAT_T*)cudaprob3::physics::mass_data_device)[( i * 3 + j)]
-#define AXFAC(a,b,c,d,e) ((FLOAT_T*)cudaprob3::physics::A_X_factor_device)[a * 3 * 3 * 3 * 4 + b * 3 * 3 * 4 + c * 3 * 4 + d * 4 + e]
-#define ORDER(i) cudaprob3::physics::mass_order_device[i]
+#define U(i,j) ((math::ComplexNumber<FLOAT_T>*)cudaprob3linear::physics::mix_data_device)[( i * 3 + j)]
+#define DM(i,j) ((FLOAT_T*)cudaprob3linear::physics::mass_data_device)[( i * 3 + j)]
+#define AXFAC(a,b,c,d,e) ((FLOAT_T*)cudaprob3linear::physics::A_X_factor_device)[a * 3 * 3 * 3 * 4 + b * 3 * 3 * 4 + c * 3 * 4 + d * 4 + e]
+#define ORDER(i) cudaprob3linear::physics::mass_order_device[i]
 
 #else
 
-#define U(i,j) ((math::ComplexNumber<FLOAT_T>*)cudaprob3::physics::mix_data)[( i * 3 + j)]
-#define DM(i,j) ((FLOAT_T*)cudaprob3::physics::mass_data)[( i * 3 + j)]
-#define AXFAC(a,b,c,d,e) ((FLOAT_T*)cudaprob3::physics::A_X_factor)[a * 3 * 3 * 3 * 4 + b * 3 * 3 * 4 + c * 3 * 4 + d * 4 + e]
-#define ORDER(i) cudaprob3::physics::mass_order[i]
+#define U(i,j) ((math::ComplexNumber<FLOAT_T>*)cudaprob3linear::physics::mix_data)[( i * 3 + j)]
+#define DM(i,j) ((FLOAT_T*)cudaprob3linear::physics::mass_data)[( i * 3 + j)]
+#define AXFAC(a,b,c,d,e) ((FLOAT_T*)cudaprob3linear::physics::A_X_factor)[a * 3 * 3 * 3 * 4 + b * 3 * 3 * 4 + c * 3 * 4 + d * 4 + e]
+#define ORDER(i) cudaprob3linear::physics::mass_order[i]
 #endif
 
 
-namespace cudaprob3{
+namespace cudaprob3linear{
 
   namespace physics{
 
@@ -459,7 +459,7 @@ namespace cudaprob3{
     template<typename FLOAT_T>
       HOSTDEVICEQUALIFIER
       void getC(FLOAT_T E, FLOAT_T rho, FLOAT_T dmMatVac[][3], FLOAT_T dmMatMat[][3],
-          cudaprob3::NeutrinoType type, FLOAT_T phase_offset, math::ComplexNumber<FLOAT_T> C[3][3][3]) {
+          cudaprob3linear::NeutrinoType type, FLOAT_T phase_offset, math::ComplexNumber<FLOAT_T> C[3][3][3]) {
 
         const int nExp = 3;
         const int nNuFlav = 3;
@@ -1045,8 +1045,8 @@ namespace cudaprob3{
                               math::ComplexNumber<FLOAT_T> sinc_exp_factor; 
                               FLOAT_T Sinc_Arg = 0.5 * darg_distance * hw;
 
-                              sinc_exp_factor.re = cudaprob3::math::defined_sinc(Sinc_Arg) * cos(darg_distance * hm);
-                              sinc_exp_factor.im = cudaprob3::math::defined_sinc(Sinc_Arg) * sin(darg_distance * hm);
+                              sinc_exp_factor.re = cudaprob3linear::math::defined_sinc(Sinc_Arg) * cos(darg_distance * hm);
+                              sinc_exp_factor.im = cudaprob3linear::math::defined_sinc(Sinc_Arg) * sin(darg_distance * hm);
 
                               UNROLLQUALIFIER
                                 for (int iNuFlav=0;iNuFlav<nNuFlav;iNuFlav++) { //In flav
@@ -1395,7 +1395,7 @@ namespace cudaprob3{
 
         }// namespace physics
 
-      } // namespace cudaprob3
+      } // namespace cudaprob3linear
 
 
 

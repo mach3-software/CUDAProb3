@@ -27,7 +27,7 @@ along with CUDAProb3++.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 
-namespace cudaprob3{
+namespace cudaprob3linear{
 
     /// \class CpuPropagator
     /// \brief Multi-threaded CPU neutrino propagation. Derived from Propagator
